@@ -1,0 +1,10 @@
+numpy==1.20.3
+onnxruntime-gpu==1.9.0
+opencv-python==4.5.3.56
+protobuf==3.18.1
+torch==1.9.1
+torchvision==0.10.1
+
+# if use onnxruntime-gpu,following requirements should be met
+# cudatoolkit(CUDA)==11.1
+# cudnn(CUDNN)>=8.0.2
