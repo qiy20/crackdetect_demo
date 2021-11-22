@@ -35,6 +35,8 @@ pip install onnxruntime-gpu
 
 ## 2.deep learning模型（models/s.onnx,models/x.onnx）
 
+![model.png](https://github.com/qiy20/crackdetect_demo/blob/main/model.png?raw=true)
+
 ### 输入：
 
 1. 张量[batch_size,chanels,img_h,img_w]，其中chanels=3为固定的，（batch_size,img_h,img_w）为dynamic axis。
@@ -59,9 +61,19 @@ pip install onnxruntime-gpu
 
 以x模型, batch_size=32为例：
 
-![time_consuming.png](https://github.com/qiy20/demo/blob/main/time_consuming.png?raw=true)
+![time_consuming.png](https://github.com/qiy20/crackdetect_demo/blob/main/time_consuming.png?raw=true)
 
 除推断过程外，耗时比较严重的是read和decode，这里尝试了多进程读取和解码图片，性能提升很小。
 
 实际部署时可能需要提前将后几个batch数据缓存到内存中。
+
+## 5.效果展示
+
+RAS之前与之后比较：
+
+![before&after_RAS.png](https://github.com/qiy20/crackdetect_demo/blob/main/before&after_RAS.png?raw=true)
+
+最终效果展示：
+
+![res.png](https://github.com/qiy20/crackdetect_demo/blob/main/res.png?raw=true)
 
