@@ -31,7 +31,7 @@ class CrackDetector:
                  conf_threshold_box=0.1, iou_threshold=0.45, classes_box=None, max_det=100,
                  ras_threshold=0.6, ras_crack_agnostic=True, max_w=4096,
                  # grid params
-                 conf_threshold_grid=0.25, match=True, classes_grid=None,):
+                 conf_threshold_grid=0.1, match=True, classes_grid=None,):
         if Path(model).suffix == '.onnx':
             model = onnxruntime.InferenceSession(model, providers=[f"{device.upper()}ExecutionProvider"])
         else:
@@ -132,16 +132,19 @@ class CrackDetector:
             g[:, :4:2] *= r[0]
             g[:, 1:4:2] *= r[1]
             g_class = g[:, 5:]
-            g_class[g_class == 1] = 3  # match box and grid label
+            g_class[g_class == 1] = 3
+            # copy crack 2 times
+            g_crack_1 = g[g_class.flatten() == 0].clone()
+            g_crack_1[:, 5:] = 1
+            g_crack_2 = g[g_class.flatten() == 0].clone()
+            g_crack_2[:, 5:] = 2
+            g = torch.cat([g, g_crack_1, g_crack_2])
             if g.numel() > 0 and self.match:
-                d_class = d[:, 5:].clone()
-                d_class[d_class < 3] = 0
+                d_class = d[:, 5:]
                 d_boxes = d[:, :4] + d_class * self.max_w
                 g_boxes = g[:, :4] + g[:, 5:] * self.max_w
                 iou = box_ioa(g_boxes, d_boxes)
                 index = iou.max(1)[0] > 0 if d.numel() > 0 else torch.zeros(g.shape[0], device=self.device).bool()
-                # remain high quality grid (crack>0.6, repair>0.9)
-                index = (((g[:, 5] == 0) & (g[:, 4] > 0.6)) | ((g[:, 5] == 3) & (g[:, 4] > 0.9))) | index
                 g = g[index]
             box_pred[i] = d
             grid_pred[i] = g
@@ -264,4 +267,4 @@ if __name__ == '__main__':
     # first run will be slower
     my_model.run(data_paths, save_dir='res', save_img=True, save_txt=True, view_img=False)
     # test real time consuming
-    my_model.run(data_paths, save_dir='res', save_img=False, save_txt=False, view_img=False)
+    # my_model.run(data_paths, save_dir='res', save_img=False, save_txt=False, view_img=False)

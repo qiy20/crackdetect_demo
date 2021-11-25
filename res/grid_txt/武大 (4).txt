@@ -1,2 +1,2 @@
-TransverseCrack 307.2 921.6 409.6 1024 0.338829
-TransverseCrack 307.2 1024 409.6 1126.4 0.328154
+LongitudinalCrack 307.2 921.6 409.6 1024 0.338829
+LongitudinalCrack 307.2 1024 409.6 1126.4 0.328154
