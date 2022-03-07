@@ -1,0 +1,4 @@
+LongitudinalCrack 307.2 921.6 409.6 1024 0.716924
+LongitudinalCrack 307.2 1024 409.6 1126.4 0.758648
+LongitudinalCrack 204.8 1126.4 307.2 1228.8 0.315025
+LongitudinalCrack 307.2 1126.4 409.6 1228.8 0.668754
