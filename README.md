@@ -18,7 +18,7 @@
    | inference time（bs=32 for single TiTAN RTX） | 2.24s                                                        |
    | dataset                                      | train: 13896<br/>val:3475<br/>test: 5014                     |
 
-3. 不再对宽高比>1,5的图进行拆分，将整张照片作为输入
+3. 不再对宽高比>1.5的图进行拆分，将整张照片作为输入
 
 4. 更新权重加载方式，兼容两个版本的模型
 
