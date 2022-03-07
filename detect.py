@@ -79,7 +79,14 @@ class CrackDetector:
         start = time.time()
         paths, images, raw_images, ratio = self.preprocess(paths)
         batch_size = len(paths)
-        box_pred, grid_pred = self.model.run(None, {self.model.get_inputs()[0].name: images})
+        pred = self.model.run(None, {self.model.get_inputs()[0].name: images})
+        pred = [torch.tensor(pre, device=self.device) for pre in pred]
+        if len(pred) == 2:
+            box_pred = pred[0]
+            grid_pred = pred[1]
+        elif len(pred) == 6:
+            grid_pred = pred[0].permute(0, 3, 1, 2).contiguous()
+            box_pred = pred[1]
         box_pred, grid_pred, paths = self.postprocess(box_pred, grid_pred, paths, ratio)
         logger.info(f'batch_size is {batch_size},total inference time is {time.time() - start}s')
         assert len(box_pred) == len(grid_pred) == len(paths) == len(raw_images)
@@ -119,8 +126,6 @@ class CrackDetector:
         return image_ids, np.stack(images), raw_images, ratio
 
     def postprocess(self, box_pred, grid_pred, paths, ratio):
-        grid_pred = torch.tensor(grid_pred, device=self.device)
-        box_pred = torch.tensor(box_pred, device=self.device)
         box_pred = self.ras(self.nms(box_pred))
         grid_pred = self.grid2box(grid_pred)
         box_pred = [clip_coords(d, (self.infer_size, self.infer_size)) for d in box_pred]
@@ -261,8 +266,8 @@ class CrackDetector:
 
 
 if __name__ == '__main__':
-    my_model = CrackDetector(model='models/x.onnx', device='cuda')
-    root = Path('data')
+    my_model = CrackDetector(model='models/best.onnx', device='cpu')
+    root = Path('data_nonchinese')
     data_paths = [path for path in root.iterdir()]
     # first run will be slower
     my_model.run(data_paths, save_dir='res', save_img=True, save_txt=True, view_img=False)

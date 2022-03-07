@@ -59,6 +59,7 @@ def resize(img, new_size):
 
 def read_img(path):
     img = cv2.imread(path)
+    # img=cv2.imdecode(np.fromfile(path,dtype=np.uint8),-1)# Chinese in Path
     assert img is not None, 'Image Not Found ' + path
     return img
 
