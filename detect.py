@@ -26,7 +26,8 @@ class CrackDetector:
                  max_bs=48,  # max batch_size(consider cuda memory)
                  infer_size=640,
                  stride=32,  # max down sampling stride
-                 num_workers=0,  # nums of thread to prepare data
+                 # preprocess
+                 num_workers=0,
                  # box params
                  conf_threshold_box=0.1, iou_threshold=0.45, classes_box=None, max_det=100,
                  ras_threshold=0.6, ras_crack_agnostic=True, max_w=4096,
@@ -112,23 +113,19 @@ class CrackDetector:
                 raw_images.append(read_img(path))
         for path, img0 in zip(paths, raw_images):
             h, w, _ = img0.shape
-            if w / h > 1.5:
-                images += [resize(img0[:, x:x + w // 2], self.infer_size) for x in [0, w // 2]]
-                split_path = path.rsplit('.', 1)
-                image_ids += [split_path[0] + _ + '.' + split_path[1] for _ in ['_L*', '_R*']]
-                ratio += [(w // 2 / self.infer_size, h / self.infer_size)] * 2
-            else:
-                images.append(resize(img0, self.infer_size))
-                image_ids.append(path)
-                ratio.append((w / self.infer_size, h / self.infer_size))
-
+            new_img = resize(img0, self.infer_size, self.stride)
+            _, new_h, new_w = new_img.shape
+            images.append(new_img)
+            image_ids.append(path)
+            ratio.append((w / new_w, h / new_h))
+        self.new_size = (new_h, new_w)
         assert len(image_ids) <= self.max_bs, 'There are too many pictures to process'
         return image_ids, np.stack(images), raw_images, ratio
 
     def postprocess(self, box_pred, grid_pred, paths, ratio):
         box_pred = self.ras(self.nms(box_pred))
         grid_pred = self.grid2box(grid_pred)
-        box_pred = [clip_coords(d, (self.infer_size, self.infer_size)) for d in box_pred]
+        box_pred = [clip_coords(d, self.new_size) for d in box_pred]
         assert len(box_pred) == len(grid_pred)
         # match gird to box
         for i, (d, g, r) in enumerate(zip(box_pred, grid_pred, ratio)):
@@ -154,29 +151,6 @@ class CrackDetector:
             box_pred[i] = d
             grid_pred[i] = g
 
-        # cat wide image
-        pi = 0
-        while pi < len(paths):
-            path = paths[pi]
-            path_split = path.rsplit('.', 1)
-            if path_split[0][-3:] == '_L*':
-                w = self.infer_size * ratio[pi][0]
-                next_d = box_pred[pi + 1]
-                next_d[:, :4:2] += w
-                new_d = torch.cat([box_pred[pi], next_d])
-                next_g = grid_pred[pi + 1]
-                next_g[:, :4:2] += w
-                new_g = torch.cat([grid_pred[pi], next_g])
-                new_p = path_split[0][:-3] + '.' + path_split[1]
-
-                box_pred[pi] = new_d
-                grid_pred[pi] = new_g
-                paths[pi] = new_p
-                del paths[pi + 1]
-                del grid_pred[pi + 1]
-                del box_pred[pi + 1]
-                del ratio[pi + 1]
-            pi += 1
         return box_pred, grid_pred, paths
 
     def grid2box(self, prediction):  # [bs,gy,gx,3]-->[bs,nc,6]
@@ -266,10 +240,11 @@ class CrackDetector:
 
 
 if __name__ == '__main__':
-    my_model = CrackDetector(model='models/best.onnx', device='cpu')
-    root = Path('data_nonchinese')
-    data_paths = [path for path in root.iterdir()]
-    # first run will be slower
-    my_model.run(data_paths, save_dir='res', save_img=True, save_txt=True, view_img=False)
-    # test real time consuming
-    # my_model.run(data_paths, save_dir='res', save_img=False, save_txt=False, view_img=False)
+    my_model = CrackDetector(model='models/x.onnx', device='cuda')
+    for project in ['中公高科', '武大', '大车']:
+        root = Path('data/' + project)
+        data_paths = [path for path in root.iterdir()]
+        # first run will be slower
+        my_model.run(data_paths, save_dir='res/' + project, save_img=True, save_txt=True, view_img=False)
+        # test real time consuming
+        # my_model.run(data_paths, save_dir='res', save_img=False, save_txt=False, view_img=False)

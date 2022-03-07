@@ -1,4 +1,35 @@
-# ONNX_demo
+# VERSION2 
+
+## 更新内容
+
+1. 移除models权重，下载使用清华云盘（https://cloud.tsinghua.edu.cn/d/fac2b47c566b4c2ca68d/）
+
+2. 更新model_cfg文件，记录模型版本参数
+
+   |                                              | 参数                                                         |
+   | -------------------------------------------- | ------------------------------------------------------------ |
+   | 训练x方式                                    | 联合训练，$\lambda = ?$                                      |
+   | base_model                                   | yolov5x_v6.0.0                                               |
+   | grid_neck                                    | PANnet                                                       |
+   | 训练超参                                     | lr0: 0.001<br/>lrf: 0.1<br/>……..<br/>mixup: 0.0<br/>copy_paste: 0.0 |
+   | box map                                      | TransverseCrack: 0.336<br/>LongitudinalCrack: 0.274<br/>AlligatoCrack: 0.423<br/>StripRepair: 0.785<br/>Marking: 0.958<br/>Joint: 0.081 |
+   | grid map                                     | Crack: 0.760<br/>Repair: 0.943<br/>Marking: 0.972            |
+   | Flops                                        | 220.1 GFLOPs                                                 |
+   | inference time（bs=32 for single TiTAN RTX） | 2.24s                                                        |
+   | dataset                                      | train: 13896<br/>val:3475<br/>test: 5014                     |
+
+3. 不再对宽高比>1,5的图进行拆分，将整张照片作为输入
+
+4. 更新权重加载方式，兼容两个版本的模型
+
+## TODO
+
+- [ ] 固定数据集，统一测试模型指标
+- [ ] 解决grid中crack具体属性依赖box获取
+
+
+
+# VERSION1
 
 ## 1.Requirements
 
