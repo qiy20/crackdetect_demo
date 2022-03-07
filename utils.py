@@ -1,9 +1,11 @@
-import torch
-import numpy as np
-import cv2
 from pathlib import Path
 import glob
 import re
+
+import torch
+import numpy as np
+import cv2
+import math
 
 
 def xywh2xyxy(x):
@@ -50,8 +52,11 @@ def plot_one_box(box, im, color=(128, 128, 128), txt_color=(255, 255, 255), labe
     return im
 
 
-def resize(img, new_size):
-    img = cv2.resize(img, (new_size, new_size), interpolation=cv2.INTER_LINEAR)
+def resize(img, new_size, stride=32):
+    h, w, _ = img.shape
+    ratio = h / new_size
+    w = math.ceil(w / ratio / stride) * stride
+    img = cv2.resize(img, (w, new_size), interpolation=cv2.INTER_LINEAR)
     img = np.ascontiguousarray(img.transpose((2, 0, 1))[::-1])
     img = img.astype(np.float32) / 255.0
     return img
@@ -59,6 +64,7 @@ def resize(img, new_size):
 
 def read_img(path):
     img = cv2.imread(path)
+    # img=cv2.imdecode(np.fromfile(path,dtype=np.uint8),-1)# Chinese in Path
     assert img is not None, 'Image Not Found ' + path
     return img
 
