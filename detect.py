@@ -240,11 +240,11 @@ class CrackDetector:
 
 
 if __name__ == '__main__':
-    my_model = CrackDetector(model='models/x.onnx', device='cuda')
+    my_model = CrackDetector(model='models/x_version2.onnx', device='cuda')
     for project in ['中公高科', '武大', '大车']:
         root = Path('data/' + project)
         data_paths = [path for path in root.iterdir()]
         # first run will be slower
-        my_model.run(data_paths, save_dir='res/' + project, save_img=True, save_txt=True, view_img=False)
+        my_model.run(data_paths, save_dir='res_version2/' + project, save_img=True, save_txt=True, view_img=False)
         # test real time consuming
         # my_model.run(data_paths, save_dir='res', save_img=False, save_txt=False, view_img=False)

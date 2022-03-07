@@ -15,7 +15,7 @@
    | box map                                      | TransverseCrack: 0.336<br/>LongitudinalCrack: 0.274<br/>AlligatoCrack: 0.423<br/>StripRepair: 0.785<br/>Marking: 0.958<br/>Joint: 0.081 |
    | grid map                                     | Crack: 0.760<br/>Repair: 0.943<br/>Marking: 0.972            |
    | Flops                                        | 220.1 GFLOPs                                                 |
-   | inference time（bs=32 for single TiTAN RTX） | 2.24s                                                        |
+   | inference time（bs=32 for single TiTAN RTX） | 1.87s                                                        |
    | dataset                                      | train: 13896<br/>val:3475<br/>test: 5014                     |
 
 3. 不再对宽高比>1.5的图进行拆分，将整张照片作为输入
@@ -29,7 +29,7 @@
 
 
 
-# VERSION1
+# VERSION1s
 
 ## 1.Requirements
 
