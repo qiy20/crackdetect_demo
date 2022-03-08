@@ -2,7 +2,7 @@
 
 ## 更新内容
 
-1. 移除models权重，下载使用清华云盘（https://cloud.tsinghua.edu.cn/d/fac2b47c566b4c2ca68d/）
+1. 移除models权重，下载使用清华云盘（https://cloud.tsinghua.edu.cn/d/654b8dd162974090baf4/）
 
 2. 更新model_cfg文件，记录模型版本参数
 
