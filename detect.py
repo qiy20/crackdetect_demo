@@ -22,7 +22,7 @@ class CrackDetector:
     color = [(0, 0, 255), (255, 0, 255), (3, 97, 255), (255, 0, 0)]
 
     def __init__(self, model,  # onnx model
-                 device,  # device: cpu or cuda
+                 device,  # device: cpu or cuda or cuda:0 or cuda:1 ....
                  max_bs=48,  # max batch_size(consider cuda memory)
                  infer_size=640,
                  stride=32,  # max down sampling stride
@@ -34,7 +34,13 @@ class CrackDetector:
                  # grid params
                  conf_threshold_grid=0.1, match=True, classes_grid=None,):
         if Path(model).suffix == '.onnx':
-            model = onnxruntime.InferenceSession(model, providers=[f"{device.upper()}ExecutionProvider"])
+            device_type = device.split(':')[0].upper()
+            if device_type == 'Cuda':
+                device_id = 0 if len(device.split(':')) == 1 else int(device.split(':')[0])
+                model = onnxruntime.InferenceSession(model, providers=[f"{device_type}ExecutionProvider"],
+                                                     provider_options=[{'device_id': device_id}])
+            else:
+                model = onnxruntime.InferenceSession(model, providers=[f"{device_type}ExecutionProvider"])
         else:
             raise TypeError(f"{model} is not an onnx model")
         self.device = device
@@ -70,9 +76,9 @@ class CrackDetector:
     def run(self, paths,  # path or List[paths]
             save_dir, view_img=False, save_img=False, save_txt=True, grid=True, ):
         # directory
-        save_dir = increment_path(save_dir, mkdir=True)
+        save_dir = Path(save_dir)
         for i in ['box_image', 'box_txt', 'grid_image', 'grid_txt']:
-            (save_dir / i).mkdir(exist_ok=True)
+            (save_dir / i).mkdir(exist_ok=True, parents=True)
         if isinstance(paths, (str, Path)):  # path-->[path]
             paths = [paths]
 
@@ -99,8 +105,7 @@ class CrackDetector:
 
     def preprocess(self, paths):
         paths = [str(Path(path).absolute()) for path in paths]
-        image_ids, images, raw_images, ratio = [], [], [], []
-        # split wide(little aspect ratio) img (2048*4096 --> 2*2048*2048) and resize to infer_size
+        images, raw_images, ratio = [], [], []
         if self.num_workers > 0:
             pool = Pool(self.num_workers)
             for path in paths:
@@ -116,11 +121,10 @@ class CrackDetector:
             new_img = resize(img0, self.infer_size, self.stride)
             _, new_h, new_w = new_img.shape
             images.append(new_img)
-            image_ids.append(path)
             ratio.append((w / new_w, h / new_h))
         self.new_size = (new_h, new_w)
-        assert len(image_ids) <= self.max_bs, 'There are too many pictures to process'
-        return image_ids, np.stack(images), raw_images, ratio
+        assert 0 < len(paths) <= self.max_bs, 'There are too many(no) images to process'
+        return paths, np.stack(images), raw_images, ratio
 
     def postprocess(self, box_pred, grid_pred, paths, ratio):
         box_pred = self.ras(self.nms(box_pred))
@@ -240,11 +244,11 @@ class CrackDetector:
 
 
 if __name__ == '__main__':
-    my_model = CrackDetector(model='models/x_version2.onnx', device='cuda')
+    my_model = CrackDetector(model='models/x.onnx', device='cuda', num_workers=0, max_bs=32)
     for project in ['中公高科', '武大', '大车']:
+        logger.info(f'project is {project}')
         root = Path('data/' + project)
-        data_paths = [path for path in root.iterdir()]
-        # first run will be slower
-        my_model.run(data_paths, save_dir='res_version2/' + project, save_img=True, save_txt=True, view_img=False)
-        # test real time consuming
-        # my_model.run(data_paths, save_dir='res', save_img=False, save_txt=False, view_img=False)
+        data_paths = [path for path in root.iterdir()]*4
+        for i in range(4):
+            # first run will be slower, test 4 times
+            my_model.run(data_paths, save_dir='res_version2/' + project, save_img=False, save_txt=True, view_img=False)
