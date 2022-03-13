@@ -13,6 +13,7 @@
 | Flops                                        | 220.1 GFLOPs                                                 |
 | inference time（bs=32 for single TiTAN RTX） | 1.87s                                                        |
 | dataset                                      | train: 13896<br/>val:3475<br/>test: 5014                     |
+| threshold_interval                           | grid: [0.7, 0.9]<br/>box:[0.1, 0.3]                          |
 
 ## s_version1.onnx
 

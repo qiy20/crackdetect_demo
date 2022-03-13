@@ -54,11 +54,12 @@ def plot_one_box(box, im, color=(128, 128, 128), txt_color=(255, 255, 255), labe
 
 def resize(img, new_size, stride=32):
     h, w, _ = img.shape
-    ratio = h / new_size
-    w = math.ceil(w / ratio / stride) * stride
-    img = cv2.resize(img, (w, new_size), interpolation=cv2.INTER_LINEAR)
-    img = np.ascontiguousarray(img.transpose((2, 0, 1))[::-1])
-    img = img.astype(np.float32) / 255.0
+    if h != 640 or w % 32 != 0:
+        ratio = h / new_size
+        w = round(w / ratio / stride) * stride
+        img = cv2.resize(img, (w, new_size), interpolation=cv2.INTER_LINEAR)
+        img = np.ascontiguousarray(img.transpose((2, 0, 1))[::-1])
+        img = img.astype(np.float32) / 255.0
     return img
 
 

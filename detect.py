@@ -29,10 +29,10 @@ class CrackDetector:
                  # preprocess
                  num_workers=0,
                  # box params
-                 conf_threshold_box=0.1, iou_threshold=0.45, classes_box=None, max_det=100,
-                 ras_threshold=0.6, ras_crack_agnostic=True, max_w=4096,
+                 conf_threshold_box=0.1, iou_threshold=0.5, classes_box=None, max_det=100,
+                 ras_threshold=0.5, ras_crack_agnostic=True, max_w=4096,
                  # grid params
-                 conf_threshold_grid=0.1, match=True, classes_grid=None,):
+                 conf_threshold_grid=0.7, match=True, classes_grid=None,):
         if Path(model).suffix == '.onnx':
             device_type = device.split(':')[0].upper()
             if device_type == 'Cuda':
@@ -77,10 +77,11 @@ class CrackDetector:
             save_dir, view_img=False, save_img=False, save_txt=True, grid=True, ):
         # directory
         save_dir = Path(save_dir)
-        for i in ['box_image', 'box_txt', 'grid_image', 'grid_txt']:
-            (save_dir / i).mkdir(exist_ok=True, parents=True)
-        if isinstance(paths, (str, Path)):  # path-->[path]
-            paths = [paths]
+        if view_img or save_img or save_txt:
+            for i in ['box_image', 'box_txt', 'grid_image', 'grid_txt']:
+                (save_dir / i).mkdir(exist_ok=True, parents=True)
+            if isinstance(paths, (str, Path)):  # path-->[path]
+                paths = [paths]
 
         # inferences
         start = time.time()
@@ -102,6 +103,7 @@ class CrackDetector:
         self.export('box', save_dir, box_pred, paths, raw_images, view_img, save_img, save_txt)
         if grid:
             self.export('grid', save_dir, grid_pred, paths, raw_images, view_img, save_img, save_txt)
+        return box_pred, grid_pred, paths
 
     def preprocess(self, paths):
         paths = [str(Path(path).absolute()) for path in paths]
@@ -244,11 +246,10 @@ class CrackDetector:
 
 
 if __name__ == '__main__':
-    my_model = CrackDetector(model='models/x.onnx', device='cuda', num_workers=0, max_bs=32)
+    my_model = CrackDetector(model='models/x_version2.onnx', device='cuda', num_workers=0, max_bs=32)
     for project in ['中公高科', '武大', '大车']:
         logger.info(f'project is {project}')
         root = Path('data/' + project)
-        data_paths = [path for path in root.iterdir()]*4
-        for i in range(4):
-            # first run will be slower, test 4 times
-            my_model.run(data_paths, save_dir='res_version2/' + project, save_img=False, save_txt=True, view_img=False)
+        data_paths = [path for path in root.iterdir()]
+        box_pred, grid_pred, paths = my_model.run(data_paths, save_dir='res_version2_0.05/' + project, save_img=True,
+                                                  save_txt=True, view_img=False)
