@@ -58,8 +58,8 @@ def resize(img, new_size, stride=32):
         ratio = h / new_size
         w = round(w / ratio / stride) * stride
         img = cv2.resize(img, (w, new_size), interpolation=cv2.INTER_LINEAR)
-        img = np.ascontiguousarray(img.transpose((2, 0, 1))[::-1])
-        img = img.astype(np.float32) / 255.0
+    img = np.ascontiguousarray(img.transpose((2, 0, 1))[::-1])
+    img = img.astype(np.float32) / 255.0
     return img
 
 
